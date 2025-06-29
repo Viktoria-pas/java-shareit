@@ -2,7 +2,7 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.ItemNotFoundException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
@@ -51,11 +51,11 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto updateItem(Long itemId, ItemUpdateDto itemUpdateDto, Long ownerId) {
         Item existingItem = items.get(itemId);
         if (existingItem == null) {
-            throw new ItemNotFoundException(itemId);
+            throw new NotFoundException("Предмет",itemId);
         }
 
         if (!existingItem.getOwner().getId().equals(ownerId)) {
-            throw new ItemNotFoundException(itemId);
+            throw new NotFoundException("Предмет",itemId);
         }
         if (itemUpdateDto.getName() != null) {
             existingItem.setName(itemUpdateDto.getName());
@@ -74,7 +74,7 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto getItemById(Long itemId) {
         Item item = items.get(itemId);
         if (item == null) {
-            throw new ItemNotFoundException(itemId);
+            throw new NotFoundException("Предмет",itemId);
         }
         return ItemMapper.toItemDto(item);
     }

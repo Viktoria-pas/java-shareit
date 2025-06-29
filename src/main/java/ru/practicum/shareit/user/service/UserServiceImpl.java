@@ -3,7 +3,7 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.ConflictException;
-import ru.practicum.shareit.exception.UserNotFoundException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUser(Long userId, UserDto userDto) {
         User existingUser = users.get(userId);
         if (existingUser == null) {
-            throw new UserNotFoundException(userId);
+            throw new NotFoundException("Пользователь", userId);
         }
 
         // Валидация email при обновлении
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserById(Long userId) {
         User user = users.get(userId);
         if (user == null) {
-            throw new UserNotFoundException(userId);
+            throw new NotFoundException("Пользователь", userId);
         }
         return UserMapper.toUserDto(user);
     }
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long userId) {
         if (!users.containsKey(userId)) {
-            throw new UserNotFoundException(userId);
+            throw new NotFoundException("Пользователь", userId);
         }
         users.remove(userId);
     }

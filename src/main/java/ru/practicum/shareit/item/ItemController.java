@@ -1,8 +1,10 @@
 package ru.practicum.shareit.item;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/items")
+@Validated
 public class ItemController {
     private final Logger log = LoggerFactory.getLogger(ItemController.class);
     private final ItemService itemService;
@@ -25,7 +28,7 @@ public class ItemController {
 
     @PostMapping
     public ItemDto addItem(@Valid @RequestBody ItemDto itemDto,
-                           @RequestHeader("X-Sharer-User-Id") Long ownerId) {
+                           @RequestHeader("X-Sharer-User-Id") @Positive Long ownerId) {
         log.info("Добавление новой вещи пользователем {}: {}", ownerId, itemDto);
         userService.getUserById(ownerId);
         ItemDto createdItem = itemService.addItem(itemDto, ownerId);
@@ -36,7 +39,7 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     public ItemDto updateItem(@PathVariable Long itemId,
                               @Valid @RequestBody ItemUpdateDto itemUpdateDto,
-                              @RequestHeader("X-Sharer-User-Id") Long ownerId) {
+                              @RequestHeader("X-Sharer-User-Id") @Positive Long ownerId) {
         log.info("Обновление вещи с ID {} пользователем {}: {}", itemId, ownerId, itemUpdateDto);
         ItemDto updatedItem = itemService.updateItem(itemId, itemUpdateDto, ownerId);
         log.info("Вещь обновлена: {}", updatedItem);
@@ -44,7 +47,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable Long itemId) {
+    public ItemDto getItemById(@PathVariable @Positive Long itemId) {
         log.info("Получение вещи с ID: {}", itemId);
         ItemDto item = itemService.getItemById(itemId);
         log.info("Найдена вещь: {}", item);
@@ -53,7 +56,7 @@ public class ItemController {
 
     @GetMapping
     public List<ItemDto> getAllItemsByOwner(
-            @RequestHeader("X-Sharer-User-Id") Long ownerId) {
+            @RequestHeader("X-Sharer-User-Id") @Positive Long ownerId) {
         log.info("Получение всех вещей владельца {}", ownerId);
         List<ItemDto> items = itemService.getAllItemsByOwner(ownerId);
         log.info("Найдено {} вещей владельца {}", items.size(), ownerId);

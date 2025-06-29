@@ -1,8 +1,10 @@
 package ru.practicum.shareit.user;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users")
+@Validated
 public class UserController {
 
     private final Logger log = LoggerFactory.getLogger(UserController.class);
@@ -29,8 +32,8 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public UserDto updateUser(@PathVariable Long userId,
-                              @RequestBody UserDto userDto) {
+    public UserDto updateUser(@PathVariable @Positive Long userId,
+                              @RequestBody @Valid UserDto userDto) {
         log.info("Обновление пользователя с ID {}: {}", userId, userDto);
         UserDto updatedUser = userService.updateUser(userId, userDto);
         log.info("Пользователь обновлен: {}", updatedUser);
@@ -38,7 +41,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public UserDto getUserById(@PathVariable Long userId) {
+    public UserDto getUserById(@PathVariable @Positive Long userId) {
         log.info("Получение пользователя с ID: {}", userId);
         UserDto user = userService.getUserById(userId);
         log.info("Найден пользователь: {}", user);
@@ -54,7 +57,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUser(@PathVariable Long userId) {
+    public void deleteUser(@PathVariable @Positive Long userId) {
         log.info("Удаление пользователя с ID: {}", userId);
         userService.deleteUser(userId);
         log.info("Пользователь с ID {} удален", userId);
