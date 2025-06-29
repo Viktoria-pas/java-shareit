@@ -6,6 +6,7 @@ import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.HashMap;
@@ -32,22 +33,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto updateUser(Long userId, UserDto userDto) {
+    public UserDto updateUser(Long userId, UserUpdateDto userUpdateDto) {
         User existingUser = users.get(userId);
         if (existingUser == null) {
             throw new NotFoundException("Пользователь", userId);
         }
 
-        // Валидация email при обновлении
-        if (userDto.getEmail() != null && !userDto.getEmail().equals(existingUser.getEmail())) {
-            if (users.values().stream().anyMatch(u -> u.getEmail().equals(userDto.getEmail()))) {
-                throw new ConflictException("Email " + userDto.getEmail() + " уже используется");
+        if (userUpdateDto.getEmail() != null && !userUpdateDto.getEmail().equals(existingUser.getEmail())) {
+            if (users.values().stream().anyMatch(u -> u.getEmail().equals(userUpdateDto.getEmail()))) {
+                throw new ConflictException("Email " + userUpdateDto.getEmail() + " уже используется");
             }
-            existingUser.setEmail(userDto.getEmail());
+            existingUser.setEmail(userUpdateDto.getEmail());
         }
 
-        if (userDto.getName() != null) {
-            existingUser.setName(userDto.getName());
+        if (userUpdateDto.getName() != null) {
+            existingUser.setName(userUpdateDto.getName());
         }
 
         return UserMapper.toUserDto(existingUser);

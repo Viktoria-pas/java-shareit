@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -32,10 +33,11 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public UserDto updateUser(@PathVariable @Positive Long userId,
-                              @RequestBody @Valid UserDto userDto) {
-        log.info("Обновление пользователя с ID {}: {}", userId, userDto);
-        UserDto updatedUser = userService.updateUser(userId, userDto);
+    public UserDto updateUser(
+            @PathVariable @Positive Long userId,
+            @RequestBody @Valid UserUpdateDto userUpdateDto) {
+        log.info("Обновление пользователя с ID {}: {}", userId, userUpdateDto);
+        UserDto updatedUser = userService.updateUser(userId, userUpdateDto);
         log.info("Пользователь обновлен: {}", updatedUser);
         return updatedUser;
     }
