@@ -2,7 +2,7 @@ package ru.practicum.shareit.booking;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import lombok.RequiredArgsConstructor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
@@ -11,15 +11,20 @@ import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
+
+
 import java.util.List;
 
 @RestController
 @RequestMapping(path = "/bookings")
-@RequiredArgsConstructor
 @Validated
 public class BookingController {
-    private final BookingService bookingService;
     private final Logger log = LoggerFactory.getLogger(BookingController.class);
+    private final BookingService bookingService;
+
+    public BookingController(BookingService bookingService) {
+        this.bookingService = bookingService;
+    }
 
     @PostMapping
     public BookingResponseDto createBooking(

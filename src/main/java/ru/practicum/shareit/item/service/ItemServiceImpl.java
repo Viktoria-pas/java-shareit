@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingStatus;
@@ -23,12 +22,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserService userService;
     private final BookingService bookingService;
     private final CommentRepository commentRepository;
+
+    public ItemServiceImpl( ItemRepository itemRepository, UserService userService, BookingService bookingService,
+                            CommentRepository commentRepository) {
+        this.itemRepository = itemRepository;
+        this.userService = userService;
+        this.bookingService = bookingService;
+        this.commentRepository = commentRepository;
+    }
 
     @Override
     public ItemDto addItem(ItemDto itemDto, Long ownerId) {
