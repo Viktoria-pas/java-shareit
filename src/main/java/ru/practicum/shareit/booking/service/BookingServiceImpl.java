@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class BookingServiceImpl implements BookingService{
+public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -174,7 +174,7 @@ public class BookingServiceImpl implements BookingService{
     }
 
     @Override
-    public List<Booking> findByBookerIdAndItemIdAndStatusAndEndBefore(Long userId, Long itemId, BookingStatus bookingStatus, LocalDateTime time){
+    public List<Booking> findByBookerIdAndItemIdAndStatusAndEndBefore(Long userId, Long itemId, BookingStatus bookingStatus, LocalDateTime time) {
         return bookingRepository.findByBookerIdAndItemIdAndStatusAndEndBefore(
                 userId, itemId, bookingStatus, time);
     }

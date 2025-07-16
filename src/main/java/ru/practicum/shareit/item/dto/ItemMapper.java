@@ -30,7 +30,6 @@ public class ItemMapper {
                 null,
                 null
         );
-        
     }
 
     public static Item toItem(ItemDto itemDto, User owner, ItemRequest request) {
