@@ -8,39 +8,34 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final Map<Long, User> users = new HashMap<>();
-    private long idCounter = 1;
+    private final UserRepository userRepository;
 
     @Override
     public UserDto createUser(UserDto userDto) {
-        if (users.values().stream().anyMatch(u -> u.getEmail().equals(userDto.getEmail()))) {
+        if (userRepository.existsByEmail(userDto.getEmail())) {
             throw new ConflictException("Пользователь с email " + userDto.getEmail() + " уже существует");
         }
 
         User user = UserMapper.toUser(userDto);
-        user.setId(idCounter++);
-        users.put(user.getId(), user);
+        User savedUser = userRepository.save(user);
         return UserMapper.toUserDto(user);
     }
 
     @Override
     public UserDto updateUser(Long userId, UserUpdateDto userUpdateDto) {
-        User existingUser = users.get(userId);
-        if (existingUser == null) {
-            throw new NotFoundException("Пользователь", userId);
-        }
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь", userId));
 
         if (userUpdateDto.getEmail() != null && !userUpdateDto.getEmail().equals(existingUser.getEmail())) {
-            if (users.values().stream().anyMatch(u -> u.getEmail().equals(userUpdateDto.getEmail()))) {
+            if (userRepository.existsByEmail(userUpdateDto.getEmail())) {
                 throw new ConflictException("Email " + userUpdateDto.getEmail() + " уже используется");
             }
             existingUser.setEmail(userUpdateDto.getEmail());
@@ -55,25 +50,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserById(Long userId) {
-        User user = users.get(userId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь", userId);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь", userId));
         return UserMapper.toUserDto(user);
     }
 
     @Override
     public List<UserDto> getAllUsers() {
-        return users.values().stream()
+        return userRepository.findAll().stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void deleteUser(Long userId) {
-        if (!users.containsKey(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь", userId);
         }
-        users.remove(userId);
+        userRepository.deleteById(userId);
     }
 }
