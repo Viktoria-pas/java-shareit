@@ -19,7 +19,7 @@ public class ItemMapper {
                         .map(CommentMapper::toCommentDto)
                         .collect(Collectors.toList()) :
                 Collections.emptyList();
-        ItemDto dto = new ItemDto();
+
         return new ItemDto(
                 item.getId(),
                 item.getName(),
