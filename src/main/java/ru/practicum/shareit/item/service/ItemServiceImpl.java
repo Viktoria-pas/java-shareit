@@ -28,7 +28,7 @@ public class ItemServiceImpl implements ItemService {
     private final BookingService bookingService;
     private final CommentRepository commentRepository;
 
-    public ItemServiceImpl( ItemRepository itemRepository, UserService userService, BookingService bookingService,
+    public ItemServiceImpl(ItemRepository itemRepository, UserService userService, BookingService bookingService,
                             CommentRepository commentRepository) {
         this.itemRepository = itemRepository;
         this.userService = userService;
