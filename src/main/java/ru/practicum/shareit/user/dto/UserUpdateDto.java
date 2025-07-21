@@ -1,10 +1,12 @@
 package ru.practicum.shareit.user.dto;
 
-import lombok.Data;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Setter
+@Getter
 public class UserUpdateDto {
 
     @Nullable
