@@ -52,13 +52,7 @@ class BookingDtoJsonTest {
     @Test
     void testBookingRequestDto_Deserialization() throws Exception {
 
-        String jsonContent = """
-                {
-                    "start": "2024-01-15T10:00:00",
-                    "end": "2024-01-16T10:00:00",
-                    "itemId": 1
-                }
-                """;
+        String jsonContent = "{\"start\": \"2024-01-15T10:00:00\", \"end\": \"2024-01-16T10:00:00\", \"itemId\": 1}";
 
         BookingRequestDto result = bookingRequestJson.parse(jsonContent).getObject();
 
@@ -117,25 +111,10 @@ class BookingDtoJsonTest {
     @Test
     void testBookingResponseDto_Deserialization() throws Exception {
 
-        String jsonContent = """
-                {
-                    "id": 1,
-                    "start": "2024-01-15T10:00:00",
-                    "end": "2024-01-16T10:00:00",
-                    "status": "APPROVED",
-                    "booker": {
-                        "id": 2,
-                        "name": "Booker Name",
-                        "email": "booker@test.com"
-                    },
-                    "item": {
-                        "id": 1,
-                        "name": "Test Item",
-                        "description": "Test Description",
-                        "available": true
-                    }
-                }
-                """;
+        String jsonContent = "{\"id\": 1, \"start\": \"2024-01-15T10:00:00\", \"end\": \"2024-01-16T10:00:00\", " +
+                "\"status\": \"APPROVED\", \"booker\": {\"id\": 2, \"name\": \"Booker Name\", " +
+                "\"email\": \"booker@test.com\"}, \"item\": {\"id\": 1, \"name\": \"Test Item\", " +
+                "\"description\": \"Test Description\", \"available\": true}}";
 
         BookingResponseDto result = bookingResponseJson.parse(jsonContent).getObject();
 
@@ -181,14 +160,7 @@ class BookingDtoJsonTest {
     @Test
     void testBookingShortDto_Deserialization() throws Exception {
 
-        String jsonContent = """
-                {
-                    "id": 1,
-                    "bookerId": 2,
-                    "start": "2024-01-15T10:00:00",
-                    "end": "2024-01-16T10:00:00"
-                }
-                """;
+        String jsonContent = "{\"id\": 1, \"bookerId\": 2, \"start\": \"2024-01-15T10:00:00\", \"end\": \"2024-01-16T10:00:00\"}";
 
         BookingShortDto result = bookingShortJson.parse(jsonContent).getObject();
 
@@ -221,7 +193,6 @@ class BookingDtoJsonTest {
         assertThat(rejectedResult).extractingJsonPathStringValue("$.status")
                 .isEqualTo("REJECTED");
 
-        // Test with CANCELED status
         BookingResponseDto canceledBooking = new BookingResponseDto();
         canceledBooking.setId(2L);
         canceledBooking.setStatus(BookingStatus.CANCELED);
@@ -249,15 +220,8 @@ class BookingDtoJsonTest {
     @Test
     void testInvalidDateTimeDeserialization() throws Exception {
 
-        String invalidJsonContent = """
-                {
-                    "start": "invalid-date",
-                    "end": "2024-01-16T10:00:00",
-                    "itemId": 1
-                }
-                """;
+        String invalidJsonContent = "{\"start\": \"invalid-date\", \"end\": \"2024-01-16T10:00:00\", \"itemId\": 1}";
 
-        // When & Then - should throw exception for invalid date format
         try {
             bookingRequestJson.parse(invalidJsonContent);
         } catch (Exception e) {

@@ -5,6 +5,7 @@ import ru.practicum.shareit.request.ItemRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
 public class ItemRequestMapper {
     public static ItemRequest toItemRequest(String description, Long requestorId) {
         ItemRequest request = new ItemRequest();

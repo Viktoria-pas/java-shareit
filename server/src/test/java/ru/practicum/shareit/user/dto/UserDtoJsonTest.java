@@ -33,26 +33,14 @@ class UserDtoJsonTest {
         assertThat(result).extractingJsonPathStringValue("$.name").isEqualTo("Test User");
         assertThat(result).extractingJsonPathStringValue("$.email").isEqualTo("test@example.com");
 
-        assertThat(result).isEqualToJson("""
-            {
-                "id": 1,
-                "name": "Test User",
-                "email": "test@example.com"
-            }
-            """);
+        assertThat(result).isEqualToJson("{\"id\": 1, \"name\": \"Test User\", \"email\": \"test@example.com\"}");
     }
 
     @Test
     @DisplayName("Should deserialize JSON to UserDto correctly")
     void shouldDeserializeJsonToUserDto() throws IOException {
 
-        String jsonContent = """
-            {
-                "id": 1,
-                "name": "Test User",
-                "email": "test@example.com"
-            }
-            """;
+        String jsonContent = "{\"id\": 1, \"name\": \"Test User\", \"email\": \"test@example.com\"}";
 
         UserDto result = json.parse(jsonContent).getObject();
 
@@ -81,13 +69,7 @@ class UserDtoJsonTest {
     @DisplayName("Should handle null values in deserialization")
     void shouldHandleNullValuesInDeserialization() throws IOException {
 
-        String jsonContent = """
-            {
-                "id": null,
-                "name": null,
-                "email": null
-            }
-            """;
+        String jsonContent = "{\"id\": null, \"name\": null, \"email\": null}";
 
         UserDto result = json.parse(jsonContent).getObject();
 
@@ -100,11 +82,7 @@ class UserDtoJsonTest {
     @DisplayName("Should handle missing fields in deserialization")
     void shouldHandleMissingFieldsInDeserialization() throws IOException {
 
-        String jsonContent = """
-            {
-                "name": "Test User"
-            }
-            """;
+        String jsonContent = "{\"name\": \"Test User\"}";
 
         UserDto result = json.parse(jsonContent).getObject();
 
@@ -160,13 +138,7 @@ class UserDtoJsonTest {
     @DisplayName("Should deserialize special characters correctly")
     void shouldDeserializeSpecialCharactersCorrectly() throws IOException {
 
-        String jsonContent = """
-            {
-                "id": 1,
-                "name": "Тест Пользователь with émojis 😊",
-                "email": "test+tag@example-domain.co.uk"
-            }
-            """;
+        String jsonContent = "{\"id\": 1, \"name\": \"Тест Пользователь with émojis 😊\", \"email\": \"test+tag@example-domain.co.uk\"}";
 
         UserDto result = json.parse(jsonContent).getObject();
 

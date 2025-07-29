@@ -31,24 +31,15 @@ class UserUpdateDtoJsonTest {
         assertThat(result).extractingJsonPathStringValue("$.name").isEqualTo("Updated User");
         assertThat(result).extractingJsonPathStringValue("$.email").isEqualTo("updated@example.com");
 
-        assertThat(result).isEqualToJson("""
-            {
-                "name": "Updated User",
-                "email": "updated@example.com"
-            }
-            """);
+        assertThat(result).isEqualToJson("{\"name\": \"Updated User\", \"email\": \"updated@example.com\"}");
     }
 
     @Test
     @DisplayName("Should deserialize JSON to UserUpdateDto correctly")
     void shouldDeserializeJsonToUserUpdateDto() throws IOException {
 
-        String jsonContent = """
-            {
-                "name": "Updated User",
-                "email": "updated@example.com"
-            }
-            """;
+        String jsonContent = "{\"name\": \"Updated User\", \"email\": \"updated@example.com\"}";
+
 
         UserUpdateDto result = json.parse(jsonContent).getObject();
 
@@ -88,11 +79,7 @@ class UserUpdateDtoJsonTest {
     @DisplayName("Should deserialize partial JSON with only name")
     void shouldDeserializePartialJsonWithOnlyName() throws IOException {
 
-        String jsonContent = """
-            {
-                "name": "Only Name Updated"
-            }
-            """;
+        String jsonContent = "{\"name\": \"Only Name Updated\"}";
 
         UserUpdateDto result = json.parse(jsonContent).getObject();
 
@@ -104,11 +91,7 @@ class UserUpdateDtoJsonTest {
     @DisplayName("Should deserialize partial JSON with only email")
     void shouldDeserializePartialJsonWithOnlyEmail() throws IOException {
 
-        String jsonContent = """
-            {
-                "email": "only.email@updated.com"
-            }
-            """;
+        String jsonContent = "{\"email\": \"only.email@updated.com\"}";
 
         UserUpdateDto result = json.parse(jsonContent).getObject();
 
@@ -146,12 +129,7 @@ class UserUpdateDtoJsonTest {
     @DisplayName("Should handle null values in deserialization")
     void shouldHandleNullValuesInDeserialization() throws IOException {
 
-        String jsonContent = """
-            {
-                "name": null,
-                "email": null
-            }
-            """;
+        String jsonContent = "{\"name\": null, \"email\": null}";
 
         UserUpdateDto result = json.parse(jsonContent).getObject();
 
@@ -163,12 +141,7 @@ class UserUpdateDtoJsonTest {
     @DisplayName("Should handle whitespace-only values")
     void shouldHandleWhitespaceOnlyValues() throws IOException {
 
-        String jsonContent = """
-            {
-                "name": "   ",
-                "email": "\\t\\n "
-            }
-            """;
+        String jsonContent = "{\"name\": \"   \", \"email\": \"\\t\\n \"}";
 
         UserUpdateDto result = json.parse(jsonContent).getObject();
 
@@ -180,12 +153,7 @@ class UserUpdateDtoJsonTest {
     @DisplayName("Should handle empty string values")
     void shouldHandleEmptyStringValues() throws IOException {
 
-        String jsonContent = """
-            {
-                "name": "",
-                "email": ""
-            }
-            """;
+        String jsonContent = "{\"name\": \"\", \"email\": \"\"}";
 
         UserUpdateDto result = json.parse(jsonContent).getObject();
 
