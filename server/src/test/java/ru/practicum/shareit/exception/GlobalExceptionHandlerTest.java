@@ -11,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+
 import jakarta.validation.Path;
 import java.util.List;
 import java.util.Map;
@@ -118,4 +119,81 @@ class GlobalExceptionHandlerTest {
         assertEquals("Внутренняя ошибка сервера", result.get("error"));
         assertEquals("Произошла непредвиденная ошибка", result.get("message"));
     }
+    @Test
+    void handleValidationExceptions_WithConstraintViolationException_ReturnsErrorResponse() {
+        // Создаем mock ConstraintViolationException
+        jakarta.validation.ConstraintViolationException constraintException =
+                mock(jakarta.validation.ConstraintViolationException.class);
+
+        // Создаем mock ConstraintViolation
+        jakarta.validation.ConstraintViolation<Object> violation = mock(jakarta.validation.ConstraintViolation.class);
+        Path propertyPath = mock(Path.class);
+
+        when(propertyPath.toString()).thenReturn("email");
+        when(violation.getPropertyPath()).thenReturn(propertyPath);
+        when(violation.getMessage()).thenReturn("Некорректный email");
+        when(constraintException.getConstraintViolations()).thenReturn(java.util.Set.of(violation));
+
+        ru.practicum.shareit.exception.ErrorResponse result = globalExceptionHandler.handleValidationExceptions(constraintException);
+
+        assertNotNull(result);
+        assertEquals("Ошибка валидации", result.getError());
+        assertEquals("email: Некорректный email", result.getMessage());
+    }
+
+    @Test
+    void handleValidationExceptions_WithMultipleFieldErrors_ReturnsErrorResponse() {
+        FieldError fieldError1 = new FieldError("user", "name", "Имя не может быть пустым");
+        FieldError fieldError2 = new FieldError("user", "email", "Некорректный email");
+
+        when(methodArgumentNotValidException.getBindingResult()).thenReturn(bindingResult);
+        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError1, fieldError2));
+
+        ru.practicum.shareit.exception.ErrorResponse result = globalExceptionHandler.handleValidationExceptions(methodArgumentNotValidException);
+
+        assertNotNull(result);
+        assertEquals("Ошибка валидации", result.getError());
+        assertTrue(result.getMessage().contains("name: Имя не может быть пустым"));
+        assertTrue(result.getMessage().contains("email: Некорректный email"));
+        assertTrue(result.getMessage().contains(";"));
+    }
+
+    @Test
+    void handleValidationExceptions_WithConstraintViolationException_MultipleViolations_ReturnsErrorResponse() {
+        jakarta.validation.ConstraintViolationException constraintException =
+                mock(jakarta.validation.ConstraintViolationException.class);
+
+        jakarta.validation.ConstraintViolation<Object> violation1 = mock(jakarta.validation.ConstraintViolation.class);
+        jakarta.validation.ConstraintViolation<Object> violation2 = mock(jakarta.validation.ConstraintViolation.class);
+
+        Path propertyPath1 = mock(Path.class);
+        Path propertyPath2 = mock(Path.class);
+
+        when(propertyPath1.toString()).thenReturn("name");
+        when(propertyPath2.toString()).thenReturn("email");
+        when(violation1.getPropertyPath()).thenReturn(propertyPath1);
+        when(violation2.getPropertyPath()).thenReturn(propertyPath2);
+        when(violation1.getMessage()).thenReturn("Имя не может быть пустым");
+        when(violation2.getMessage()).thenReturn("Некорректный email");
+        when(constraintException.getConstraintViolations()).thenReturn(java.util.Set.of(violation1, violation2));
+
+        ru.practicum.shareit.exception.ErrorResponse result = globalExceptionHandler.handleValidationExceptions(constraintException);
+
+        assertNotNull(result);
+        assertEquals("Ошибка валидации", result.getError());
+        assertNotNull(result.getMessage());
+    }
+
+    @Test
+    void handleValidationExceptions_WithEmptyFieldErrors_ReturnsErrorResponse() {
+        when(methodArgumentNotValidException.getBindingResult()).thenReturn(bindingResult);
+        when(bindingResult.getFieldErrors()).thenReturn(List.of());
+
+        ru.practicum.shareit.exception.ErrorResponse result = globalExceptionHandler.handleValidationExceptions(methodArgumentNotValidException);
+
+        assertNotNull(result);
+        assertEquals("Ошибка валидации", result.getError());
+        assertEquals("", result.getMessage());
+    }
 }
+

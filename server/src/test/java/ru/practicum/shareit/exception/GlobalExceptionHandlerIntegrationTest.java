@@ -55,6 +55,56 @@ class GlobalExceptionHandlerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Произошла непредвиденная ошибка"));
     }
 
+    @Test
+    void handleMethodArgumentNotValidException_Returns400() throws Exception {
+        TestDto invalidDto = new TestDto("", "invalid-email");
+
+        mockMvc.perform(post("/test/validation")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void handleMethodArgumentNotValidException_WithBlankName_Returns400() throws Exception {
+        TestDto invalidDto = new TestDto("", "test@example.com");
+
+        mockMvc.perform(post("/test/validation")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("name: Имя не может быть пустым"));
+    }
+
+    @Test
+    void handleMethodArgumentNotValidException_WithInvalidEmail_Returns400() throws Exception {
+        TestDto invalidDto = new TestDto("John", "invalid-email");
+
+        mockMvc.perform(post("/test/validation")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("email: Некорректный формат email"));
+    }
+
+    @Test
+    void handleMethodArgumentNotValidException_WithMultipleErrors_Returns400() throws Exception {
+        TestDto invalidDto = new TestDto("", "invalid-email");
+
+        mockMvc.perform(post("/test/validation")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").exists());
+    }
+    @Test
+    void handleConstraintViolationException_Returns400() throws Exception {
+        mockMvc.perform(get("/test/constraint-violation"))
+                .andExpect(status().isBadRequest());
+
+    }
+
     @TestConfiguration
     static class TestConfig {
         @Bean
@@ -91,6 +141,13 @@ class GlobalExceptionHandlerIntegrationTest {
         public void testGenericError() {
             throw new RuntimeException("Неожиданная ошибка");
         }
+
+        @GetMapping("/constraint-violation")
+        public void testConstraintViolation() {
+            throw new jakarta.validation.ConstraintViolationException("Constraint violation",
+                    java.util.Set.of());
+        }
+
     }
 
     static class TestDto {

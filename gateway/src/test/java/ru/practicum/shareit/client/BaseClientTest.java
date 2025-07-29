@@ -11,6 +11,7 @@ import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -387,4 +388,153 @@ class BaseClientTest {
 
         verify(restTemplate).exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class));
     }
+    @Test
+    void patch_WithUserIdAndParametersAndBody_ShouldMakeCorrectRequest() {
+        String path = "/test";
+        long userId = 1L;
+        Map<String, Object> parameters = Map.of("param1", "value1");
+        String body = "test body";
+        ResponseEntity<Object> expectedResponse = ResponseEntity.ok().build();
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class), any(Map.class)))
+                .thenReturn(expectedResponse);
+
+        ResponseEntity<Object> actualResponse = ((TestBaseClient) baseClient).testPatch(path, userId, parameters, body);
+
+        verify(restTemplate).exchange(
+                anyString(),
+                eq(HttpMethod.PATCH),
+                entityCaptor.capture(),
+                eq(Object.class),
+                parametersCaptor.capture()
+        );
+        assertThat(entityCaptor.getValue().getHeaders().get("X-Sharer-User-Id")).containsExactly("1");
+        assertThat(entityCaptor.getValue().getBody()).isEqualTo(body);
+        assertThat(parametersCaptor.getValue()).isEqualTo(parameters);
+        assertThat(actualResponse).isEqualTo(expectedResponse);
+    }
+
+    @Test
+    void put_WithParameters_ShouldPassParametersToRestTemplate() {
+        String path = "/test";
+        long userId = 1L;
+        Map<String, Object> parameters = Map.of("param1", "value1");
+        String body = "test body";
+        ResponseEntity<Object> expectedResponse = ResponseEntity.ok().build();
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class), any(Map.class)))
+                .thenReturn(expectedResponse);
+
+        ResponseEntity<Object> actualResponse = ((TestBaseClient) baseClient).testPut(path, userId, parameters, body);
+
+        verify(restTemplate).exchange(
+                anyString(),
+                eq(HttpMethod.PUT),
+                any(HttpEntity.class),
+                eq(Object.class),
+                parametersCaptor.capture()
+        );
+        assertThat(parametersCaptor.getValue()).isEqualTo(parameters);
+        assertThat(actualResponse).isEqualTo(expectedResponse);
+    }
+
+    @Test
+    void delete_WithUserIdAndParameters_ShouldMakeCorrectRequest() {
+        String path = "/test";
+        long userId = 1L;
+        Map<String, Object> parameters = Map.of("param1", "value1");
+        ResponseEntity<Object> expectedResponse = ResponseEntity.ok().build();
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class), any(Map.class)))
+                .thenReturn(expectedResponse);
+
+        ResponseEntity<Object> actualResponse = ((TestBaseClient) baseClient).testDelete(path, userId, parameters);
+
+        verify(restTemplate).exchange(
+                anyString(),
+                eq(HttpMethod.DELETE),
+                entityCaptor.capture(),
+                eq(Object.class),
+                parametersCaptor.capture()
+        );
+        assertThat(entityCaptor.getValue().getHeaders().get("X-Sharer-User-Id")).containsExactly("1");
+        assertThat(parametersCaptor.getValue()).isEqualTo(parameters);
+        assertThat(actualResponse).isEqualTo(expectedResponse);
+    }
+
+    @Test
+    void makeAndSendRequest_WithEmptyPath_ShouldHandleCorrectly() {
+        String path = "";
+        ResponseEntity<Object> expectedResponse = ResponseEntity.ok().build();
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class)))
+                .thenReturn(expectedResponse);
+
+        ResponseEntity<Object> actualResponse = ((TestBaseClient) baseClient).testGet(path);
+
+        verify(restTemplate).exchange(
+                urlCaptor.capture(),
+                any(HttpMethod.class),
+                any(HttpEntity.class),
+                eq(Object.class)
+        );
+        assertThat(urlCaptor.getValue()).isEqualTo(baseUrl);
+        assertThat(actualResponse).isEqualTo(expectedResponse);
+    }
+    @Test
+    void delete_WithUserId_ShouldCallDeleteWithParameters() {
+        String path = "/test";
+        long userId = 1L;
+        ResponseEntity<Object> expectedResponse = ResponseEntity.ok().build();
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class)))
+                .thenReturn(expectedResponse);
+
+        ResponseEntity<Object> actualResponse = ((TestBaseClient) baseClient).testDelete(path, userId);
+
+        verify(restTemplate).exchange(
+                anyString(),
+                eq(HttpMethod.DELETE),
+                entityCaptor.capture(),
+                eq(Object.class)
+        );
+        assertThat(entityCaptor.getValue().getHeaders().get("X-Sharer-User-Id")).containsExactly("1");
+        assertThat(actualResponse).isEqualTo(expectedResponse);
+    }
+
+    @Test
+    void patch_WithUserIdAndBody_ShouldCallPatchWithParameters() {
+        String path = "/test";
+        long userId = 1L;
+        String body = "test body";
+        ResponseEntity<Object> expectedResponse = ResponseEntity.ok().build();
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class)))
+                .thenReturn(expectedResponse);
+
+        ResponseEntity<Object> actualResponse = ((TestBaseClient) baseClient).testPatch(path, userId, body);
+
+        verify(restTemplate).exchange(
+                anyString(),
+                eq(HttpMethod.PATCH),
+                entityCaptor.capture(),
+                eq(Object.class)
+        );
+        assertThat(entityCaptor.getValue().getHeaders().get("X-Sharer-User-Id")).containsExactly("1");
+        assertThat(entityCaptor.getValue().getBody()).isEqualTo(body);
+        assertThat(actualResponse).isEqualTo(expectedResponse);
+    }
+
+    @Test
+    void prepareGatewayResponse_WithReflection() throws Exception {
+
+        Method method = BaseClient.class.getDeclaredMethod("prepareGatewayResponse", ResponseEntity.class);
+        method.setAccessible(true);
+
+        BaseClient client = new BaseClient(restTemplate, baseUrl);
+
+        ResponseEntity<Object> success = ResponseEntity.ok("success");
+        ResponseEntity<Object> result = (ResponseEntity<Object>) method.invoke(client, success);
+        assertThat(result).isSameAs(success);
+
+        ResponseEntity<Object> error = ResponseEntity.badRequest().body("error");
+        result = (ResponseEntity<Object>) method.invoke(client, error);
+        assertThat(result.getBody()).isEqualTo("error");
+    }
+
+
 }
