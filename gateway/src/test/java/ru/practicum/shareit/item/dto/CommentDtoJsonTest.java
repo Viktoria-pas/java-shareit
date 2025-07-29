@@ -39,11 +39,7 @@ class CommentDtoJsonTest {
     @Test
     void deserialize_ValidJson_ReturnsCorrectCommentDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "text": "Amazing product, highly recommend!"
-                }
-                """;
+        String jsonContent = "{\"text\": \"Amazing product, highly recommend!\"}";
 
         CommentDto result = jacksonTester.parse(jsonContent).getObject();
 
@@ -53,11 +49,7 @@ class CommentDtoJsonTest {
     @Test
     void deserialize_JsonWithSpecialCharacters_ReturnsCorrectCommentDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "text": "Price: $50.99 - Quality: excellent! Would buy again 👍"
-                }
-                """;
+        String jsonContent = "{\"text\": \"Price: $50.99 - Quality: excellent! Would buy again 👍\"}";
 
         CommentDto result = jacksonTester.parse(jsonContent).getObject();
 
@@ -67,11 +59,7 @@ class CommentDtoJsonTest {
     @Test
     void deserialize_JsonWithEscapedCharacters_ReturnsCorrectCommentDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "text": "Quote: \\"This is the best item ever!\\""
-                }
-                """;
+        String jsonContent = "{\"text\": \"Quote: \\\"This is the best item ever!\\\"\"}";
 
         CommentDto result = jacksonTester.parse(jsonContent).getObject();
 
@@ -81,11 +69,7 @@ class CommentDtoJsonTest {
     @Test
     void deserialize_JsonWithMultilineText_ReturnsCorrectCommentDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "text": "Line 1\\nLine 2\\nLine 3"
-                }
-                """;
+        String jsonContent = "{\"text\": \"Line 1\\nLine 2\\nLine 3\"}";
 
         CommentDto result = jacksonTester.parse(jsonContent).getObject();
 

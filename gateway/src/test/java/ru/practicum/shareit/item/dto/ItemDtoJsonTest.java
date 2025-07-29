@@ -43,14 +43,7 @@ class ItemDtoJsonTest {
     @Test
     void deserialize_ValidJson_ReturnsCorrectItemDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "name": "Test Item",
-                    "description": "Test Description",
-                    "available": true,
-                    "requestId": 456
-                }
-                """;
+        String jsonContent = "{\"name\": \"Test Item\", \"description\": \"Test Description\", \"available\": true, \"requestId\": 456}";
 
         ItemDto result = jacksonTester.parse(jsonContent).getObject();
 
@@ -63,14 +56,7 @@ class ItemDtoJsonTest {
     @Test
     void deserialize_JsonWithNullRequestId_ReturnsCorrectItemDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "name": "Test Item",
-                    "description": "Test Description",
-                    "available": false,
-                    "requestId": null
-                }
-                """;
+        String jsonContent = "{\"name\": \"Test Item\", \"description\": \"Test Description\", \"available\": false, \"requestId\": null}";
 
         ItemDto result = jacksonTester.parse(jsonContent).getObject();
 
@@ -84,13 +70,7 @@ class ItemDtoJsonTest {
     @Test
     void deserialize_JsonWithMissingRequestId_ReturnsCorrectItemDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "name": "Test Item",
-                    "description": "Test Description",
-                    "available": true
-                }
-                """;
+        String jsonContent = "{\"name\": \"Test Item\", \"description\": \"Test Description\", \"available\": true}";
 
         ItemDto result = jacksonTester.parse(jsonContent).getObject();
 

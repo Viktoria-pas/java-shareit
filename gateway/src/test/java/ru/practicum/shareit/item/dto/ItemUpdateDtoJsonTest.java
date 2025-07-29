@@ -65,13 +65,11 @@ class ItemUpdateDtoJsonTest {
     @Test
     void deserialize_FullJson_ReturnsCorrectItemUpdateDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "name": "Deserialized Item",
-                    "description": "Deserialized Description",
-                    "available": true
-                }
-                """;
+        String jsonContent = "{" +
+                "\"name\": \"Deserialized Item\"," +
+                "\"description\": \"Deserialized Description\"," +
+                "\"available\": true" +
+                "}";
 
         ItemUpdateDto result = jacksonTester.parse(jsonContent).getObject();
 
@@ -83,13 +81,7 @@ class ItemUpdateDtoJsonTest {
     @Test
     void deserialize_PartialJson_ReturnsCorrectItemUpdateDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "name": "Only Name",
-                    "description": null,
-                    "available": null
-                }
-                """;
+        String jsonContent = "{\"name\": \"Only Name\", \"description\": null, \"available\": null}";
 
         ItemUpdateDto result = jacksonTester.parse(jsonContent).getObject();
 
@@ -113,11 +105,7 @@ class ItemUpdateDtoJsonTest {
     @Test
     void deserialize_JsonWithMissingFields_ReturnsCorrectItemUpdateDto() throws Exception {
 
-        String jsonContent = """
-                {
-                    "available": false
-                }
-                """;
+        String jsonContent = "{\"available\": false}";
 
         ItemUpdateDto result = jacksonTester.parse(jsonContent).getObject();
 

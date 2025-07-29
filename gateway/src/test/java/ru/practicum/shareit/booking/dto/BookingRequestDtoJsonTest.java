@@ -36,13 +36,7 @@ class BookingRequestDtoJsonTest {
     @Test
     void deserialize_ShouldCorrectlyDeserializeBookingRequestDto() throws Exception {
 
-        String jsonContent = """
-            {
-                "itemId": 1,
-                "start": "2025-12-01T10:00:00",
-                "end": "2025-12-02T12:00:00"
-            }
-            """;
+        String jsonContent = "{\"itemId\": 1, \"start\": \"2025-12-01T10:00:00\", \"end\": \"2025-12-02T12:00:00\"}";
 
         BookingRequestDto result = json.parse(jsonContent).getObject();
 
@@ -54,13 +48,7 @@ class BookingRequestDtoJsonTest {
     @Test
     void deserialize_WithNullItemId_ShouldDeserializeSuccessfully() throws Exception {
 
-        String jsonContent = """
-            {
-                "itemId": null,
-                "start": "2025-12-01T10:00:00",
-                "end": "2025-12-02T12:00:00"
-            }
-            """;
+        String jsonContent = "{\"itemId\": null, \"start\": \"2025-12-01T10:00:00\", \"end\": \"2025-12-02T12:00:00\"}";
 
         BookingRequestDto result = json.parse(jsonContent).getObject();
 
@@ -71,14 +59,8 @@ class BookingRequestDtoJsonTest {
 
     @Test
     void deserialize_WithNullDates_ShouldDeserializeSuccessfully() throws Exception {
-        // Given
-        String jsonContent = """
-            {
-                "itemId": 1,
-                "start": null,
-                "end": null
-            }
-            """;
+
+        String jsonContent = "{\"itemId\": 1, \"start\": null, \"end\": null}";
 
         BookingRequestDto result = json.parse(jsonContent).getObject();
 
@@ -114,13 +96,7 @@ class BookingRequestDtoJsonTest {
     @Test
     void deserialize_WithCustomDateTimeFormat_ShouldHandleCorrectly() throws Exception {
 
-        String jsonContent = """
-            {
-                "itemId": 1,
-                "start": "2025-12-01T10:00:00.123456",
-                "end": "2025-12-02T12:00:00.987654"
-            }
-            """;
+        String jsonContent = "{\"itemId\": 1, \"start\": \"2025-12-01T10:00:00.123456\", \"end\": \"2025-12-02T12:00:00.987654\"}";
 
         BookingRequestDto result = json.parse(jsonContent).getObject();
 
