@@ -100,7 +100,9 @@ class GlobalExceptionHandlerIntegrationTest {
         @Email(message = "Некорректный формат email")
         private String email;
 
-        public TestDto() {}
+        public TestDto() {
+
+        }
 
         public TestDto(String name, String email) {
             this.name = name;
@@ -110,12 +112,15 @@ class GlobalExceptionHandlerIntegrationTest {
         public String getName() {
             return name;
         }
+
         public void setName(String name) {
             this.name = name;
         }
+
         public String getEmail() {
             return email;
         }
+
         public void setEmail(String email) {
             this.email = email;
         }
