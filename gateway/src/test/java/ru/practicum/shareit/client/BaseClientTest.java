@@ -388,6 +388,7 @@ class BaseClientTest {
 
         verify(restTemplate).exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class));
     }
+
     @Test
     void patch_WithUserIdAndParametersAndBody_ShouldMakeCorrectRequest() {
         String path = "/test";
@@ -395,6 +396,7 @@ class BaseClientTest {
         Map<String, Object> parameters = Map.of("param1", "value1");
         String body = "test body";
         ResponseEntity<Object> expectedResponse = ResponseEntity.ok().build();
+
         when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Object.class), any(Map.class)))
                 .thenReturn(expectedResponse);
 
@@ -477,6 +479,7 @@ class BaseClientTest {
         assertThat(urlCaptor.getValue()).isEqualTo(baseUrl);
         assertThat(actualResponse).isEqualTo(expectedResponse);
     }
+
     @Test
     void delete_WithUserId_ShouldCallDeleteWithParameters() {
         String path = "/test";
