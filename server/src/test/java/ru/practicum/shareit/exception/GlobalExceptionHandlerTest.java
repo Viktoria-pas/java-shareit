@@ -119,6 +119,7 @@ class GlobalExceptionHandlerTest {
         assertEquals("Внутренняя ошибка сервера", result.get("error"));
         assertEquals("Произошла непредвиденная ошибка", result.get("message"));
     }
+
     @Test
     void handleValidationExceptions_WithConstraintViolationException_ReturnsErrorResponse() {
         // Создаем mock ConstraintViolationException

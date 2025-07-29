@@ -98,6 +98,7 @@ class GlobalExceptionHandlerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").exists());
     }
+
     @Test
     void handleConstraintViolationException_Returns400() throws Exception {
         mockMvc.perform(get("/test/constraint-violation"))
