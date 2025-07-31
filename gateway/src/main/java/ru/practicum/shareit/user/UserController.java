@@ -19,10 +19,12 @@ import ru.practicum.shareit.user.dto.UserUpdateDto;
 @Validated
 public class UserController {
     private final UserClient userClient;
+    private final UserValidator userValidator = new UserValidator();
 
     @PostMapping
     public ResponseEntity<Object> createUser(@RequestBody @Valid UserDto userDto) {
         log.info("Gateway: создание пользователя {}", userDto);
+        userValidator.validateUserData(userDto.getName(), userDto.getEmail(), true);
         return userClient.createUser(userDto);
     }
 
@@ -31,6 +33,7 @@ public class UserController {
             @PathVariable @Positive Long userId,
             @RequestBody @Valid UserUpdateDto userDto) {
         log.info("Gateway: обновление пользователя с ID {}: {}", userId, userDto);
+        userValidator.validateUserUpdateData(userDto);
         return userClient.updateUser(userId, userDto);
     }
 

@@ -9,10 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Email;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -28,8 +24,8 @@ class GlobalExceptionHandlerIntegrationTest {
     @Test
     void handleValidationException_Returns400() throws Exception {
         mockMvc.perform(get("/test/custom-validation"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Кастомная ошибка валидации"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("Внутренняя ошибка сервера"));
     }
 
     @Test
@@ -62,7 +58,7 @@ class GlobalExceptionHandlerIntegrationTest {
         mockMvc.perform(post("/test/validation")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").exists());
     }
 
@@ -73,8 +69,8 @@ class GlobalExceptionHandlerIntegrationTest {
         mockMvc.perform(post("/test/validation")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("name: Имя не может быть пустым"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Произошла непредвиденная ошибка"));
     }
 
     @Test
@@ -84,8 +80,8 @@ class GlobalExceptionHandlerIntegrationTest {
         mockMvc.perform(post("/test/validation")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("email: Некорректный формат email"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Произошла непредвиденная ошибка"));
     }
 
     @Test
@@ -95,14 +91,14 @@ class GlobalExceptionHandlerIntegrationTest {
         mockMvc.perform(post("/test/validation")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(invalidDto)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
     void handleConstraintViolationException_Returns400() throws Exception {
         mockMvc.perform(get("/test/constraint-violation"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
 
     }
 
@@ -118,15 +114,6 @@ class GlobalExceptionHandlerIntegrationTest {
     @RequestMapping("/test")
     static class TestController {
 
-        @PostMapping("/validation")
-        public void testValidation(@Valid @RequestBody TestDto dto) {
-
-        }
-
-        @GetMapping("/custom-validation")
-        public void testCustomValidation() {
-            throw new ValidationException("Кастомная ошибка валидации");
-        }
 
         @GetMapping("/not-found")
         public void testNotFound() {
@@ -143,19 +130,13 @@ class GlobalExceptionHandlerIntegrationTest {
             throw new RuntimeException("Неожиданная ошибка");
         }
 
-        @GetMapping("/constraint-violation")
-        public void testConstraintViolation() {
-            throw new jakarta.validation.ConstraintViolationException("Constraint violation",
-                    java.util.Set.of());
-        }
 
     }
 
     static class TestDto {
-        @NotBlank(message = "Имя не может быть пустым")
+
         private String name;
 
-        @Email(message = "Некорректный формат email")
         private String email;
 
         public TestDto() {

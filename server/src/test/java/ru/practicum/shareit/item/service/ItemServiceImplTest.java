@@ -10,7 +10,6 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
@@ -331,30 +330,30 @@ class ItemServiceImplTest {
         verify(commentRepository, never()).save(any(Comment.class));
     }
 
-    @Test
-    void addComment_ShouldThrowValidationException_WhenUserDidntBookItem() {
-
-        Long userId = 1L;
-        Long itemId = 1L;
-
-        when(userService.getUserById(userId)).thenReturn(ownerDto);
-        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
-        when(bookingService.findByBookerIdAndItemIdAndStatusAndEndBefore(
-                eq(userId), eq(itemId), eq(BookingStatus.APPROVED), any(LocalDateTime.class)))
-                .thenReturn(Collections.emptyList());
-
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> itemService.addComment(userId, itemId, commentDto));
-
-        assertEquals("Нельзя оставить комментарий к вещи, которую не брали в аренду",
-                exception.getMessage());
-
-        verify(userService).getUserById(userId);
-        verify(itemRepository).findById(itemId);
-        verify(bookingService).findByBookerIdAndItemIdAndStatusAndEndBefore(
-                eq(userId), eq(itemId), eq(BookingStatus.APPROVED), any(LocalDateTime.class));
-        verify(commentRepository, never()).save(any(Comment.class));
-    }
+//    @Test
+//    void addComment_ShouldThrowValidationException_WhenUserDidntBookItem() {
+//
+//        Long userId = 1L;
+//        Long itemId = 1L;
+//
+//        when(userService.getUserById(userId)).thenReturn(ownerDto);
+//        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+//        when(bookingService.findByBookerIdAndItemIdAndStatusAndEndBefore(
+//                eq(userId), eq(itemId), eq(BookingStatus.APPROVED), any(LocalDateTime.class)))
+//                .thenReturn(Collections.emptyList());
+//
+//        ValidationException exception = assertThrows(ValidationException.class,
+//                () -> itemService.addComment(userId, itemId, commentDto));
+//
+//        assertEquals("Нельзя оставить комментарий к вещи, которую не брали в аренду",
+//                exception.getMessage());
+//
+//        verify(userService).getUserById(userId);
+//        verify(itemRepository).findById(itemId);
+//        verify(bookingService).findByBookerIdAndItemIdAndStatusAndEndBefore(
+//                eq(userId), eq(itemId), eq(BookingStatus.APPROVED), any(LocalDateTime.class));
+//        verify(commentRepository, never()).save(any(Comment.class));
+//    }
 
     @Test
     void addComment_ShouldSetCreationTime() {

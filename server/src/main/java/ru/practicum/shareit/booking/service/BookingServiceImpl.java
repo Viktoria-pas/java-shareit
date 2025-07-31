@@ -9,8 +9,9 @@ import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -43,15 +44,15 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Предмет", bookingRequestDto.getItemId()));
 
         if (!item.getAvailable()) {
-            throw new ValidationException("Предмет недоступен для бронирования");
+            throw new BadRequestException("Предмет недоступен для бронирования");
         }
 
         if (item.getOwner().getId().equals(userId)) {
-            throw new ValidationException("Владелец не может забронировать свою вещь");
+            throw new BadRequestException("Владелец не может забронировать свою вещь");
         }
 
         if (bookingRequestDto.getStart().isAfter(bookingRequestDto.getEnd())) {
-            throw new ValidationException("Дата начала не может быть позже даты окончания");
+            throw new BadRequestException("Дата начала не может быть позже даты окончания");
         }
 
         Booking booking = new Booking();
@@ -72,11 +73,11 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Бронирование", bookingId));
 
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            throw new ValidationException("Только владелец может изменить статус бронирования");
+            throw new BadRequestException("Только владелец может изменить статус бронирования");
         }
 
         if (booking.getStatus() != BookingStatus.WAITING) {
-            throw new ValidationException("Нельзя изменить статус уже обработанного бронирования");
+            throw new BadRequestException("Нельзя изменить статус уже обработанного бронирования");
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
@@ -91,7 +92,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (!booking.getBooker().getId().equals(userId) &&
                 !booking.getItem().getOwner().getId().equals(userId)) {
-            throw new ValidationException("Нет доступа к данному бронированию");
+            throw new ConflictException("Нет доступа к данному бронированию");
         }
 
         return BookingMapper.toBookingResponseDto(booking);
@@ -129,7 +130,7 @@ public class BookingServiceImpl implements BookingService {
                         userId, BookingStatus.REJECTED);
                 break;
             default:
-                throw new ValidationException("Неизвестный параметр state: " + state);
+                throw new ConflictException("Неизвестный параметр state: " + state);
         }
 
         return bookings.stream()
@@ -168,7 +169,7 @@ public class BookingServiceImpl implements BookingService {
                         userId, BookingStatus.REJECTED);
                 break;
             default:
-                throw new ValidationException("Неизвестный параметр state: " + state);
+                throw new ConflictException("Неизвестный параметр state: " + state);
         }
 
         return bookings.stream()

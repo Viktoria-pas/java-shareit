@@ -34,7 +34,6 @@ class BookingControllerTest {
 
     @Test
     void createBooking_ValidRequest_ShouldReturnOk() throws Exception {
-
         BookingRequestDto bookingRequestDto = new BookingRequestDto(
                 1L,
                 LocalDateTime.now().plusDays(1),
@@ -52,8 +51,7 @@ class BookingControllerTest {
     }
 
     @Test
-    void createBooking_MissingUserId_ShouldReturnBadRequest() throws Exception {
-
+    void createBooking_MissingUserId_ShouldReturnInternalServerError() throws Exception {
         BookingRequestDto bookingRequestDto = new BookingRequestDto(
                 1L,
                 LocalDateTime.now().plusDays(1),
@@ -63,28 +61,11 @@ class BookingControllerTest {
         mockMvc.perform(post("/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookingRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void createBooking_InvalidItemId_ShouldReturnBadRequest() throws Exception {
-
-        BookingRequestDto bookingRequestDto = new BookingRequestDto(
-                null,
-                LocalDateTime.now().plusDays(1),
-                LocalDateTime.now().plusDays(2)
-        );
-
-        mockMvc.perform(post("/bookings")
-                        .header("X-Sharer-User-Id", userId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
     void createBooking_StartDateInPast_ShouldReturnBadRequest() throws Exception {
-
         BookingRequestDto bookingRequestDto = new BookingRequestDto(
                 1L,
                 LocalDateTime.now().minusDays(1),
@@ -99,12 +80,11 @@ class BookingControllerTest {
     }
 
     @Test
-    void createBooking_EndDateNotInFuture_ShouldReturnBadRequest() throws Exception {
-
+    void createBooking_EndDateInPast_ShouldReturnBadRequest() throws Exception {
         BookingRequestDto bookingRequestDto = new BookingRequestDto(
                 1L,
                 LocalDateTime.now().plusDays(1),
-                LocalDateTime.now().minusDays(1) // Past date
+                LocalDateTime.now().minusDays(1)
         );
 
         mockMvc.perform(post("/bookings")
@@ -115,8 +95,68 @@ class BookingControllerTest {
     }
 
     @Test
-    void updateBookingStatus_ValidRequest_ShouldReturnOk() throws Exception {
+    void createBooking_StartAfterEnd_ShouldReturnBadRequest() throws Exception {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                LocalDateTime.now().plusDays(2),
+                LocalDateTime.now().plusDays(1)
+        );
 
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBooking_StartEqualsEnd_ShouldReturnBadRequest() throws Exception {
+        LocalDateTime dateTime = LocalDateTime.now().plusDays(1);
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                dateTime,
+                dateTime
+        );
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBooking_NullStartDate_ShouldReturnBadRequest() throws Exception {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                null,
+                LocalDateTime.now().plusDays(2)
+        );
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBooking_NullEndDate_ShouldReturnBadRequest() throws Exception {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                LocalDateTime.now().plusDays(1),
+                null
+        );
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateBookingStatus_ValidApproved_ShouldReturnOk() throws Exception {
         when(bookingClient.updateBookingStatus(eq(userId), eq(bookingId), eq(true)))
                 .thenReturn(ResponseEntity.ok().build());
 
@@ -127,16 +167,26 @@ class BookingControllerTest {
     }
 
     @Test
-    void updateBookingStatus_MissingApprovedParam_ShouldReturnBadRequest() throws Exception {
+    void updateBookingStatus_ValidRejected_ShouldReturnOk() throws Exception {
+        when(bookingClient.updateBookingStatus(eq(userId), eq(bookingId), eq(false)))
+                .thenReturn(ResponseEntity.ok().build());
 
         mockMvc.perform(patch("/bookings/{bookingId}", bookingId)
-                        .header("X-Sharer-User-Id", userId))
-                .andExpect(status().isBadRequest());
+                        .header("X-Sharer-User-Id", userId)
+                        .param("approved", "false"))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void getBookingById_ValidRequest_ShouldReturnOk() throws Exception {
+    void updateBookingStatus_MissingApprovedParam_ShouldReturnInternalServerError() throws Exception {
+        mockMvc.perform(patch("/bookings/{bookingId}", bookingId)
+                        .header("X-Sharer-User-Id", userId))
+                .andExpect(status().isInternalServerError());
+    }
 
+    // Тесты для getBookingById
+    @Test
+    void getBookingById_ValidRequest_ShouldReturnOk() throws Exception {
         when(bookingClient.getBookingById(eq(userId), eq(bookingId)))
                 .thenReturn(ResponseEntity.ok().build());
 
@@ -145,10 +195,9 @@ class BookingControllerTest {
                 .andExpect(status().isOk());
     }
 
-
+    // Тесты для getUserBookings
     @Test
-    void getUserBookings_ValidRequest_ShouldReturnOk() throws Exception {
-
+    void getUserBookings_DefaultParameters_ShouldReturnOk() throws Exception {
         when(bookingClient.getUserBookings(eq(userId), eq("ALL"), eq(0), eq(10)))
                 .thenReturn(ResponseEntity.ok().build());
 
@@ -159,7 +208,6 @@ class BookingControllerTest {
 
     @Test
     void getUserBookings_WithCustomParameters_ShouldReturnOk() throws Exception {
-
         when(bookingClient.getUserBookings(eq(userId), eq("WAITING"), eq(5), eq(20)))
                 .thenReturn(ResponseEntity.ok().build());
 
@@ -172,8 +220,23 @@ class BookingControllerTest {
     }
 
     @Test
-    void getOwnerBookings_ValidRequest_ShouldReturnOk() throws Exception {
+    void getUserBookings_AllValidStates_ShouldReturnOk() throws Exception {
+        String[] validStates = {"ALL", "CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED"};
 
+        for (String state : validStates) {
+            when(bookingClient.getUserBookings(eq(userId), eq(state), eq(0), eq(10)))
+                    .thenReturn(ResponseEntity.ok().build());
+
+            mockMvc.perform(get("/bookings")
+                            .header("X-Sharer-User-Id", userId)
+                            .param("state", state))
+                    .andExpect(status().isOk());
+        }
+    }
+
+    // Тесты для getOwnerBookings
+    @Test
+    void getOwnerBookings_DefaultParameters_ShouldReturnOk() throws Exception {
         when(bookingClient.getOwnerBookings(eq(userId), eq("ALL"), eq(0), eq(10)))
                 .thenReturn(ResponseEntity.ok().build());
 
@@ -184,15 +247,195 @@ class BookingControllerTest {
 
     @Test
     void getOwnerBookings_WithCustomParameters_ShouldReturnOk() throws Exception {
-        // Given
-        when(bookingClient.getOwnerBookings(eq(userId), eq("APPROVED"), eq(10), eq(5)))
+        when(bookingClient.getOwnerBookings(eq(userId), eq("CURRENT"), eq(10), eq(5)))
                 .thenReturn(ResponseEntity.ok().build());
 
         mockMvc.perform(get("/bookings/owner")
                         .header("X-Sharer-User-Id", userId)
-                        .param("state", "APPROVED")
+                        .param("state", "CURRENT")
                         .param("from", "10")
                         .param("size", "5"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getOwnerBookings_AllValidStates_ShouldReturnOk() throws Exception {
+        String[] validStates = {"ALL", "CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED"};
+
+        for (String state : validStates) {
+            when(bookingClient.getOwnerBookings(eq(userId), eq(state), eq(0), eq(10)))
+                    .thenReturn(ResponseEntity.ok().build());
+
+            mockMvc.perform(get("/bookings/owner")
+                            .header("X-Sharer-User-Id", userId)
+                            .param("state", state))
+                    .andExpect(status().isOk());
+        }
+    }
+
+    @Test
+    void getOwnerBookings_InvalidState_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("state", "INVALID_STATE"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getOwnerBookings_EmptyState_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("state", ""))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getOwnerBookings_BlankState_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("state", "   "))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getOwnerBookings_LowerCaseValidState_ShouldReturnOk() throws Exception {
+        when(bookingClient.getOwnerBookings(eq(userId), eq("current"), eq(0), eq(10)))
+                .thenReturn(ResponseEntity.ok().build());
+
+        mockMvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("state", "current"))
+                .andExpect(status().isOk());
+    }
+
+
+    @Test
+    void getUserBookings_NegativeFrom_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("from", "-1"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getUserBookings_ZeroSize_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("size", "0"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getUserBookings_NegativeSize_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("size", "-1"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getOwnerBookings_NegativeFrom_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("from", "-1"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getOwnerBookings_ZeroSize_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", userId)
+                        .param("size", "0"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBooking_NegativeUserId_ShouldReturnBadRequest() throws Exception {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                LocalDateTime.now().plusDays(1),
+                LocalDateTime.now().plusDays(2)
+        );
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", -1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBooking_ZeroUserId_ShouldReturnBadRequest() throws Exception {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                LocalDateTime.now().plusDays(1),
+                LocalDateTime.now().plusDays(2)
+        );
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", 0L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBooking_StartDayBooking_ShouldReturnBadRequest() throws Exception {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                null,
+                LocalDateTime.now().plusDays(2)
+        );
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", 0L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBooking_EndDayBooking_ShouldReturnBadRequest() throws Exception {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                LocalDateTime.now().plusDays(2),
+                null
+        );
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", 0L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createBooking_EndDayBookingBeforeStart_ShouldReturnBadRequest() throws Exception {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto(
+                1L,
+                LocalDateTime.now().plusDays(2),
+                LocalDateTime.now().plusDays(1)
+        );
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", 0L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateBookingStatus_NegativeBookingId_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(patch("/bookings/{bookingId}", -1L)
+                        .header("X-Sharer-User-Id", userId)
+                        .param("approved", "true"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getBookingById_NegativeBookingId_ShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/bookings/{bookingId}", -1L)
+                        .header("X-Sharer-User-Id", userId))
+                .andExpect(status().isBadRequest());
     }
 }

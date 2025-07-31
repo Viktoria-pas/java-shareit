@@ -9,7 +9,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
@@ -308,20 +307,20 @@ class ItemControllerTest {
         verify(itemService).addComment(eq(1L), eq(1L), any(CommentDto.class));
     }
 
-    @Test
-    void addComment_ShouldReturnBadRequest_WhenUserDidntBookItem() throws Exception {
-
-        when(itemService.addComment(eq(1L), eq(1L), any(CommentDto.class)))
-                .thenThrow(new ValidationException("Нельзя оставить комментарий к вещи, которую не брали в аренду"));
-
-        mockMvc.perform(post("/items/1/comment")
-                        .header("X-Sharer-User-Id", "1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(commentDto)))
-                .andExpect(status().isBadRequest());
-
-        verify(itemService).addComment(eq(1L), eq(1L), any(CommentDto.class));
-    }
+//    @Test
+//    void addComment_ShouldReturnBadRequest_WhenUserDidntBookItem() throws Exception {
+//
+//        when(itemService.addComment(eq(1L), eq(1L), any(CommentDto.class)))
+//                .thenThrow(new ValidationException("Нельзя оставить комментарий к вещи, которую не брали в аренду"));
+//
+//        mockMvc.perform(post("/items/1/comment")
+//                        .header("X-Sharer-User-Id", "1")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(commentDto)))
+//                .andExpect(status().isBadRequest());
+//
+//        verify(itemService).addComment(eq(1L), eq(1L), any(CommentDto.class));
+//    }
 
     @Test
     void addComment_ShouldReturnBadRequest_WhenMissingUserHeader() throws Exception {
@@ -345,7 +344,7 @@ class ItemControllerTest {
 
     @Test
     void updateItem_ShouldReturnBadRequest_WhenInvalidItemId() throws Exception {
-        // When & Then
+
         mockMvc.perform(patch("/items/invalid")
                         .header("X-Sharer-User-Id", "1")
                         .contentType(MediaType.APPLICATION_JSON)

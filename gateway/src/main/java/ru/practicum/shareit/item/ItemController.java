@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
@@ -19,12 +20,14 @@ import ru.practicum.shareit.item.dto.ItemUpdateDto;
 @Validated
 public class ItemController {
     private final ItemClient itemClient;
+    private final ItemValidator itemValidator = new ItemValidator();
 
     @PostMapping
     public ResponseEntity<Object> addItem(
             @Valid @RequestBody ItemDto itemDto,
             @RequestHeader("X-Sharer-User-Id") @Positive Long userId) {
         log.info("Gateway: добавление новой вещи пользователем {}: {}", userId, itemDto);
+        itemValidator.validateItemData(itemDto);
         return itemClient.addItem(userId, itemDto);
     }
 
@@ -34,6 +37,7 @@ public class ItemController {
             @Valid @RequestBody ItemUpdateDto itemDto,
             @RequestHeader("X-Sharer-User-Id") @Positive Long userId) {
         log.info("Gateway: обновление вещи с ID {} пользователем {}: {}", itemId, userId, itemDto);
+        itemValidator.validateItemUpdateData(itemDto);
         return itemClient.updateItem(userId, itemId, itemDto);
     }
 
@@ -53,6 +57,11 @@ public class ItemController {
     @GetMapping("/search")
     public ResponseEntity<Object> searchItems(@RequestParam String text) {
         log.info("Gateway: поиск вещей по тексту '{}'", text);
+
+        if (text == null) {
+            throw new ValidationException("Поисковый запрос не может быть null");
+        }
+
         return itemClient.searchItems(text);
     }
 
@@ -62,7 +71,9 @@ public class ItemController {
             @PathVariable @Positive Long itemId,
             @Valid @RequestBody CommentDto commentDto) {
         log.info("Gateway: добавление комментария к вещи с ID {} пользователем с ID {}", itemId, userId);
+        itemValidator.validateComment(commentDto);
         return itemClient.addComment(userId, itemId, commentDto);
     }
+
 }
 

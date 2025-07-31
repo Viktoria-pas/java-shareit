@@ -1,6 +1,5 @@
 package ru.practicum.shareit.request;
 
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,8 +35,8 @@ public class ItemRequestController {
     @GetMapping("/all")
     public List<ItemRequestDto> getAllRequests(
             @RequestHeader(USER_ID_HEADER) Long userId,
-            @RequestParam(defaultValue = "0") @Min(0) Integer from,
-            @RequestParam(defaultValue = "20") @Min(1) Integer size) {
+            @RequestParam(defaultValue = "0") Integer from,
+            @RequestParam(defaultValue = "20")  Integer size) {
         log.info("GET /requests/all - получение всех запросов, userId: {}, from: {}, size: {}", userId, from, size);
         return itemRequestService.getAllRequests(userId, from, size);
     }

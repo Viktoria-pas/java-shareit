@@ -41,17 +41,6 @@ class ExceptionClassesTest {
     }
 
     @Test
-    void validationException_WithMessage_CreatesExceptionWithCorrectMessage() {
-
-        String message = "Ошибка валидации данных";
-
-        ValidationException exception = new ValidationException(message);
-
-        assertEquals(message, exception.getMessage());
-        assertTrue(exception instanceof RuntimeException);
-    }
-
-    @Test
     void errorResponse_WithErrorAndMessage_CreatesObjectWithCorrectFields() {
 
         String error = "Ошибка валидации";

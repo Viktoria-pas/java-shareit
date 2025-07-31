@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.service.BookingService;
+import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
@@ -130,7 +130,7 @@ public class ItemServiceImpl implements ItemService {
                 userId, itemId, BookingStatus.APPROVED, LocalDateTime.now());
 
         if (userBookings.isEmpty()) {
-            throw new ValidationException("Нельзя оставить комментарий к вещи, которую не брали в аренду");
+            throw new BadRequestException("Нельзя оставить комментарий к вещи, которую не брали в аренду");
         }
 
         Comment comment = new Comment();

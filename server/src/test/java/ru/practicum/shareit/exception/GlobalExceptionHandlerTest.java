@@ -1,19 +1,13 @@
 package ru.practicum.shareit.exception;
 
-import jakarta.validation.ConstraintViolation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.slf4j.Logger;
+import org.springframework.test.util.ReflectionTestUtils;
 
-
-import jakarta.validation.Path;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,52 +19,18 @@ class GlobalExceptionHandlerTest {
     @InjectMocks
     private GlobalExceptionHandler globalExceptionHandler;
 
-    @Mock
-    private MethodArgumentNotValidException methodArgumentNotValidException;
-
-    @Mock
-    private BindingResult bindingResult;
-
-    @Mock
-    private ConstraintViolation<Object> constraintViolation;
-
-    @Mock
-    private Path path;
+    private Logger mockLogger;
 
     @BeforeEach
     void setUp() {
         globalExceptionHandler = new GlobalExceptionHandler();
+        mockLogger = mock(Logger.class);
+
+        ReflectionTestUtils.setField(globalExceptionHandler, "log", mockLogger);
     }
 
     @Test
-    void handleValidationExceptions_WithMethodArgumentNotValidException_ReturnsErrorResponse() {
-
-        FieldError fieldError = new FieldError("user", "email", "Некорректный email");
-        when(methodArgumentNotValidException.getBindingResult()).thenReturn(bindingResult);
-        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
-
-        ErrorResponse result = globalExceptionHandler.handleValidationExceptions(methodArgumentNotValidException);
-
-        assertNotNull(result);
-
-        verify(methodArgumentNotValidException).getBindingResult();
-        verify(bindingResult).getFieldErrors();
-    }
-
-    @Test
-    void handleCustomValidationExceptions_ReturnsErrorMap() {
-
-        ValidationException exception = new ValidationException("Некорректные данные");
-
-        Map<String, String> result = globalExceptionHandler.handleCustomValidationExceptions(exception);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("Некорректные данные", result.get("error"));
-    }
-
-    @Test
-    void handleNotFoundExceptions_ReturnsErrorMap() {
+    void handleNotFoundExceptions_WithEntityAndId_ShouldReturnCorrectErrorMap() {
 
         NotFoundException exception = new NotFoundException("Пользователь", 1L);
 
@@ -80,37 +40,276 @@ class GlobalExceptionHandlerTest {
         assertEquals(2, result.size());
         assertEquals("Объект не найден", result.get("error"));
         assertEquals("Пользователь с ID 1 не найден", result.get("message"));
+
+        verify(mockLogger).warn("Объект не найден: {}", "Пользователь с ID 1 не найден");
     }
 
     @Test
-    void handleNotFoundExceptions_WithCustomMessage_ReturnsErrorMap() {
+    void handleNotFoundExceptions_WithCustomMessage_ShouldReturnCorrectErrorMap() {
 
-        NotFoundException exception = new NotFoundException("Кастомное сообщение об ошибке");
+        NotFoundException exception = new NotFoundException("Запрос с id 123 не найден");
 
         Map<String, String> result = globalExceptionHandler.handleNotFoundExceptions(exception);
 
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals("Объект не найден", result.get("error"));
-        assertEquals("Кастомное сообщение об ошибке", result.get("message"));
+        assertEquals("Запрос с id 123 не найден", result.get("message"));
+
+        verify(mockLogger).warn("Объект не найден: {}", "Запрос с id 123 не найден");
     }
 
     @Test
-    void handleConflictExceptions_ReturnsErrorMap() {
+    void handleNotFoundExceptions_WithItemNotFound_ShouldReturnCorrectErrorMap() {
 
-        ConflictException exception = new ConflictException("Email уже существует");
+        NotFoundException exception = new NotFoundException("Предмет", 5L);
+
+        Map<String, String> result = globalExceptionHandler.handleNotFoundExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Объект не найден", result.get("error"));
+        assertEquals("Предмет с ID 5 не найден", result.get("message"));
+
+        verify(mockLogger).warn("Объект не найден: {}", "Предмет с ID 5 не найден");
+    }
+
+    @Test
+    void handleNotFoundExceptions_WithBookingNotFound_ShouldReturnCorrectErrorMap() {
+
+        NotFoundException exception = new NotFoundException("Бронирование", 10L);
+
+        Map<String, String> result = globalExceptionHandler.handleNotFoundExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Объект не найден", result.get("error"));
+        assertEquals("Бронирование с ID 10 не найден", result.get("message"));
+
+        verify(mockLogger).warn("Объект не найден: {}", "Бронирование с ID 10 не найден");
+    }
+
+    @Test
+    void handleNotFoundExceptions_WithEmptyMessage_ShouldHandleCorrectly() {
+
+        NotFoundException exception = new NotFoundException("");
+
+        Map<String, String> result = globalExceptionHandler.handleNotFoundExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Объект не найден", result.get("error"));
+        assertEquals("", result.get("message"));
+
+        verify(mockLogger).warn("Объект не найден: {}", "");
+    }
+
+    @Test
+    void handleConflictExceptions_WithEmailDuplicate_ShouldReturnCorrectErrorMap() {
+
+        ConflictException exception = new ConflictException("Пользователь с email test@example.com уже существует");
 
         Map<String, String> result = globalExceptionHandler.handleConflictExceptions(exception);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("Email уже существует", result.get("error"));
+        assertEquals("Пользователь с email test@example.com уже существует", result.get("error"));
+
+        verify(mockLogger).warn("Конфликт данных: {}", "Пользователь с email test@example.com уже существует");
     }
 
     @Test
-    void handleAllExceptions_ReturnsGenericErrorMap() {
+    void handleConflictExceptions_WithItemUnavailable_ShouldReturnCorrectErrorMap() {
 
-        RuntimeException exception = new RuntimeException("Неожиданная ошибка");
+        ConflictException exception = new ConflictException("Предмет недоступен для бронирования");
+
+        Map<String, String> result = globalExceptionHandler.handleConflictExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Предмет недоступен для бронирования", result.get("error"));
+
+        verify(mockLogger).warn("Конфликт данных: {}", "Предмет недоступен для бронирования");
+    }
+
+    @Test
+    void handleConflictExceptions_WithOwnerBooking_ShouldReturnCorrectErrorMap() {
+
+        ConflictException exception = new ConflictException("Владелец не может забронировать свою вещь");
+
+        Map<String, String> result = globalExceptionHandler.handleConflictExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Владелец не может забронировать свою вещь", result.get("error"));
+
+        verify(mockLogger).warn("Конфликт данных: {}", "Владелец не может забронировать свою вещь");
+    }
+
+    @Test
+    void handleConflictExceptions_WithBookingAlreadyProcessed_ShouldReturnCorrectErrorMap() {
+
+        ConflictException exception = new ConflictException("Нельзя изменить статус уже обработанного бронирования");
+
+        Map<String, String> result = globalExceptionHandler.handleConflictExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Нельзя изменить статус уже обработанного бронирования", result.get("error"));
+
+        verify(mockLogger).warn("Конфликт данных: {}", "Нельзя изменить статус уже обработанного бронирования");
+    }
+
+    @Test
+    void handleConflictExceptions_WithAccessDenied_ShouldReturnCorrectErrorMap() {
+
+        ConflictException exception = new ConflictException("Нет доступа к данному бронированию");
+
+        Map<String, String> result = globalExceptionHandler.handleConflictExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Нет доступа к данному бронированию", result.get("error"));
+
+        verify(mockLogger).warn("Конфликт данных: {}", "Нет доступа к данному бронированию");
+    }
+
+    @Test
+    void handleConflictExceptions_WithCommentRestriction_ShouldReturnCorrectErrorMap() {
+
+        ConflictException exception = new ConflictException("Нельзя оставить комментарий к вещи, которую не брали в аренду");
+
+        Map<String, String> result = globalExceptionHandler.handleConflictExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Нельзя оставить комментарий к вещи, которую не брали в аренду", result.get("error"));
+
+        verify(mockLogger).warn("Конфликт данных: {}", "Нельзя оставить комментарий к вещи, которую не брали в аренду");
+    }
+
+    @Test
+    void handleConflictExceptions_WithInvalidState_ShouldReturnCorrectErrorMap() {
+
+        ConflictException exception = new ConflictException("Неизвестный параметр state: INVALID");
+
+        Map<String, String> result = globalExceptionHandler.handleConflictExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Неизвестный параметр state: INVALID", result.get("error"));
+
+        verify(mockLogger).warn("Конфликт данных: {}", "Неизвестный параметр state: INVALID");
+    }
+
+    @Test
+    void handleConflictExceptions_WithEmptyMessage_ShouldHandleCorrectly() {
+
+        ConflictException exception = new ConflictException("");
+
+        Map<String, String> result = globalExceptionHandler.handleConflictExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("", result.get("error"));
+
+        verify(mockLogger).warn("Конфликт данных: {}", "");
+    }
+
+    @Test
+    void handleBadRequest_WithValidationError_ShouldReturnCorrectErrorMap() {
+
+        BadRequestException exception = new BadRequestException("Предмет недоступен для бронирования");
+
+        Map<String, String> result = globalExceptionHandler.handleBadRequest(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Неверный запрос", result.get("error"));
+        assertEquals("Предмет недоступен для бронирования", result.get("message"));
+
+        verify(mockLogger).error("{Запрос неверный: {}", "Предмет недоступен для бронирования", exception);
+    }
+
+    @Test
+    void handleBadRequest_WithOwnerBookingError_ShouldReturnCorrectErrorMap() {
+
+        BadRequestException exception = new BadRequestException("Владелец не может забронировать свою вещь");
+
+        Map<String, String> result = globalExceptionHandler.handleBadRequest(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Неверный запрос", result.get("error"));
+        assertEquals("Владелец не может забронировать свою вещь", result.get("message"));
+
+        verify(mockLogger).error("{Запрос неверный: {}", "Владелец не может забронировать свою вещь", exception);
+    }
+
+    @Test
+    void handleBadRequest_WithDateValidationError_ShouldReturnCorrectErrorMap() {
+
+        BadRequestException exception = new BadRequestException("Дата начала не может быть позже даты окончания");
+
+        Map<String, String> result = globalExceptionHandler.handleBadRequest(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Неверный запрос", result.get("error"));
+        assertEquals("Дата начала не может быть позже даты окончания", result.get("message"));
+
+        verify(mockLogger).error("{Запрос неверный: {}", "Дата начала не может быть позже даты окончания", exception);
+    }
+
+    @Test
+    void handleBadRequest_WithStatusChangeError_ShouldReturnCorrectErrorMap() {
+
+        BadRequestException exception = new BadRequestException("Только владелец может изменить статус бронирования");
+
+        Map<String, String> result = globalExceptionHandler.handleBadRequest(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Неверный запрос", result.get("error"));
+        assertEquals("Только владелец может изменить статус бронирования", result.get("message"));
+
+        verify(mockLogger).error("{Запрос неверный: {}", "Только владелец может изменить статус бронирования", exception);
+    }
+
+    @Test
+    void handleBadRequest_WithProcessedBookingError_ShouldReturnCorrectErrorMap() {
+
+        BadRequestException exception = new BadRequestException("Нельзя изменить статус уже обработанного бронирования");
+
+        Map<String, String> result = globalExceptionHandler.handleBadRequest(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Неверный запрос", result.get("error"));
+        assertEquals("Нельзя изменить статус уже обработанного бронирования", result.get("message"));
+
+        verify(mockLogger).error("{Запрос неверный: {}", "Нельзя изменить статус уже обработанного бронирования", exception);
+    }
+
+    @Test
+    void handleBadRequest_WithEmptyMessage_ShouldHandleCorrectly() {
+
+        BadRequestException exception = new BadRequestException("");
+
+        Map<String, String> result = globalExceptionHandler.handleBadRequest(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Неверный запрос", result.get("error"));
+        assertEquals("", result.get("message"));
+
+        verify(mockLogger).error("{Запрос неверный: {}", "", exception);
+    }
+
+    @Test
+    void handleAllExceptions_WithRuntimeException_ShouldReturnGenericErrorMap() {
+
+        RuntimeException exception = new RuntimeException("Ошибка базы данных");
 
         Map<String, String> result = globalExceptionHandler.handleAllExceptions(exception);
 
@@ -118,83 +317,79 @@ class GlobalExceptionHandlerTest {
         assertEquals(2, result.size());
         assertEquals("Внутренняя ошибка сервера", result.get("error"));
         assertEquals("Произошла непредвиденная ошибка", result.get("message"));
+
+        verify(mockLogger).error("Внутренняя ошибка сервера: {}", "Ошибка базы данных", exception);
     }
 
     @Test
-    void handleValidationExceptions_WithConstraintViolationException_ReturnsErrorResponse() {
-        // Создаем mock ConstraintViolationException
-        jakarta.validation.ConstraintViolationException constraintException =
-                mock(jakarta.validation.ConstraintViolationException.class);
+    void handleAllExceptions_WithNullPointerException_ShouldReturnGenericErrorMap() {
 
-        // Создаем mock ConstraintViolation
-        jakarta.validation.ConstraintViolation<Object> violation = mock(jakarta.validation.ConstraintViolation.class);
-        Path propertyPath = mock(Path.class);
+        NullPointerException exception = new NullPointerException("Объект равен null");
 
-        when(propertyPath.toString()).thenReturn("email");
-        when(violation.getPropertyPath()).thenReturn(propertyPath);
-        when(violation.getMessage()).thenReturn("Некорректный email");
-        when(constraintException.getConstraintViolations()).thenReturn(java.util.Set.of(violation));
-
-        ru.practicum.shareit.exception.ErrorResponse result = globalExceptionHandler.handleValidationExceptions(constraintException);
+        Map<String, String> result = globalExceptionHandler.handleAllExceptions(exception);
 
         assertNotNull(result);
-        assertEquals("Ошибка валидации", result.getError());
-        assertEquals("email: Некорректный email", result.getMessage());
+        assertEquals(2, result.size());
+        assertEquals("Внутренняя ошибка сервера", result.get("error"));
+        assertEquals("Произошла непредвиденная ошибка", result.get("message"));
+
+        verify(mockLogger).error("Внутренняя ошибка сервера: {}", "Объект равен null", exception);
     }
 
     @Test
-    void handleValidationExceptions_WithMultipleFieldErrors_ReturnsErrorResponse() {
-        FieldError fieldError1 = new FieldError("user", "name", "Имя не может быть пустым");
-        FieldError fieldError2 = new FieldError("user", "email", "Некорректный email");
+    void handleAllExceptions_WithSQLException_ShouldReturnGenericErrorMap() {
 
-        when(methodArgumentNotValidException.getBindingResult()).thenReturn(bindingResult);
-        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError1, fieldError2));
+        RuntimeException exception = new RuntimeException("could not execute statement");
 
-        ru.practicum.shareit.exception.ErrorResponse result = globalExceptionHandler.handleValidationExceptions(methodArgumentNotValidException);
+        Map<String, String> result = globalExceptionHandler.handleAllExceptions(exception);
 
         assertNotNull(result);
-        assertEquals("Ошибка валидации", result.getError());
-        assertTrue(result.getMessage().contains("name: Имя не может быть пустым"));
-        assertTrue(result.getMessage().contains("email: Некорректный email"));
-        assertTrue(result.getMessage().contains(";"));
+        assertEquals(2, result.size());
+        assertEquals("Внутренняя ошибка сервера", result.get("error"));
+        assertEquals("Произошла непредвиденная ошибка", result.get("message"));
+
+        verify(mockLogger).error("Внутренняя ошибка сервера: {}", "could not execute statement", exception);
     }
 
     @Test
-    void handleValidationExceptions_WithConstraintViolationException_MultipleViolations_ReturnsErrorResponse() {
-        jakarta.validation.ConstraintViolationException constraintException =
-                mock(jakarta.validation.ConstraintViolationException.class);
+    void handleAllExceptions_WithIllegalArgumentException_ShouldReturnGenericErrorMap() {
 
-        jakarta.validation.ConstraintViolation<Object> violation1 = mock(jakarta.validation.ConstraintViolation.class);
-        jakarta.validation.ConstraintViolation<Object> violation2 = mock(jakarta.validation.ConstraintViolation.class);
+        IllegalArgumentException exception = new IllegalArgumentException("Недопустимый аргумент");
 
-        Path propertyPath1 = mock(Path.class);
-        Path propertyPath2 = mock(Path.class);
-
-        when(propertyPath1.toString()).thenReturn("name");
-        when(propertyPath2.toString()).thenReturn("email");
-        when(violation1.getPropertyPath()).thenReturn(propertyPath1);
-        when(violation2.getPropertyPath()).thenReturn(propertyPath2);
-        when(violation1.getMessage()).thenReturn("Имя не может быть пустым");
-        when(violation2.getMessage()).thenReturn("Некорректный email");
-        when(constraintException.getConstraintViolations()).thenReturn(java.util.Set.of(violation1, violation2));
-
-        ru.practicum.shareit.exception.ErrorResponse result = globalExceptionHandler.handleValidationExceptions(constraintException);
+        Map<String, String> result = globalExceptionHandler.handleAllExceptions(exception);
 
         assertNotNull(result);
-        assertEquals("Ошибка валидации", result.getError());
-        assertNotNull(result.getMessage());
+        assertEquals(2, result.size());
+        assertEquals("Внутренняя ошибка сервера", result.get("error"));
+        assertEquals("Произошла непредвиденная ошибка", result.get("message"));
+
+        verify(mockLogger).error("Внутренняя ошибка сервера: {}", "Недопустимый аргумент", exception);
     }
 
     @Test
-    void handleValidationExceptions_WithEmptyFieldErrors_ReturnsErrorResponse() {
-        when(methodArgumentNotValidException.getBindingResult()).thenReturn(bindingResult);
-        when(bindingResult.getFieldErrors()).thenReturn(List.of());
+    void handleAllExceptions_WithIllegalStateException_ShouldReturnGenericErrorMap() {
 
-        ru.practicum.shareit.exception.ErrorResponse result = globalExceptionHandler.handleValidationExceptions(methodArgumentNotValidException);
+        IllegalStateException exception = new IllegalStateException("Недопустимое состояние");
+
+        Map<String, String> result = globalExceptionHandler.handleAllExceptions(exception);
 
         assertNotNull(result);
-        assertEquals("Ошибка валидации", result.getError());
-        assertEquals("", result.getMessage());
+        assertEquals(2, result.size());
+        assertEquals("Внутренняя ошибка сервера", result.get("error"));
+        assertEquals("Произошла непредвиденная ошибка", result.get("message"));
+
+        verify(mockLogger).error("Внутренняя ошибка сервера: {}", "Недопустимое состояние", exception);
+    }
+
+    @Test
+    void handleAllExceptions_WithCustomException_ShouldReturnGenericErrorMap() {
+
+        Exception exception = new Exception("Кастомная ошибка");
+
+        Map<String, String> result = globalExceptionHandler.handleAllExceptions(exception);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Внутренняя ошибка сервера", result.get("error"));
     }
 }
-

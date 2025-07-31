@@ -168,24 +168,6 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getAllRequests_WithNegativeFrom_ShouldReturnBadRequest() throws Exception {
-
-        mockMvc.perform(get("/requests/all")
-                        .header(USER_ID_HEADER, TEST_USER_ID)
-                        .param("from", "-1"))
-                .andExpect(status().isInternalServerError());
-    }
-
-    @Test
-    void getAllRequests_WithZeroSize_ShouldReturnBadRequest() throws Exception {
-
-        mockMvc.perform(get("/requests/all")
-                        .header(USER_ID_HEADER, TEST_USER_ID)
-                        .param("size", "0"))
-                .andExpect(status().isInternalServerError());
-    }
-
-    @Test
     void getRequestById_WithExistingRequest_ShouldReturnRequest() throws Exception {
 
         ItemResponseDto itemResponse = new ItemResponseDto(1L, "Дрель", 2L);

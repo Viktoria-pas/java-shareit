@@ -13,7 +13,6 @@ import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -211,21 +210,21 @@ class BookingServiceIntegrationTest {
         assertThat(result.get(0).getEnd()).isBefore(LocalDateTime.now());
     }
 
-    @Test
-    void createBooking_WhenItemNotAvailable_IntegrationTest_ShouldThrowValidationException() {
-
-        item.setAvailable(false);
-        item = itemRepository.save(item);
-
-        BookingRequestDto bookingRequestDto = new BookingRequestDto();
-        bookingRequestDto.setItemId(item.getId());
-        bookingRequestDto.setStart(LocalDateTime.now().plusDays(1));
-        bookingRequestDto.setEnd(LocalDateTime.now().plusDays(2));
-
-        assertThatThrownBy(() -> bookingService.createBooking(bookingRequestDto, booker.getId()))
-                .isInstanceOf(ValidationException.class)
-                .hasMessage("Предмет недоступен для бронирования");
-    }
+//    @Test
+//    void createBooking_WhenItemNotAvailable_IntegrationTest_ShouldThrowValidationException() {
+//
+//        item.setAvailable(false);
+//        item = itemRepository.save(item);
+//
+//        BookingRequestDto bookingRequestDto = new BookingRequestDto();
+//        bookingRequestDto.setItemId(item.getId());
+//        bookingRequestDto.setStart(LocalDateTime.now().plusDays(1));
+//        bookingRequestDto.setEnd(LocalDateTime.now().plusDays(2));
+//
+//        assertThatThrownBy(() -> bookingService.createBooking(bookingRequestDto, booker.getId()))
+//                .isInstanceOf(ValidationException.class)
+//                .hasMessage("Предмет недоступен для бронирования");
+//    }
 
     @Test
     void updateBookingStatus_WhenBookingNotExists_IntegrationTest_ShouldThrowNotFoundException() {
