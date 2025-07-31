@@ -39,6 +39,7 @@ public class GlobalExceptionHandler {
                 "message", "Произошла непредвиденная ошибка"
         );
     }
+
     @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleBadRequest(BadRequestException ex) {
